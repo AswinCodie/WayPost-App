@@ -44,7 +44,7 @@ export class MapConfigService {
 
     // Default: CartoDB Voyager - beautiful, free, no API key required
     return {
-      provider: 'carto_voyager',
+      provider: 'osm',
       apiKey: '',
     };
   }
@@ -114,11 +114,11 @@ export class MapConfigService {
 
     // Default: CartoDB Voyager — beautiful, modern, completely free, no API key needed
     return {
-      url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       attribution:
         '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 20,
-      subdomains: 'abcd',
+      maxZoom: 19,
+      subdomains: 'abc',
     };
   }
 }
