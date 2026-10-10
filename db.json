@@ -1,0 +1,26 @@
+{
+  "accounts": [
+    {
+      "id": "DJ4RyGz2s4E",
+      "displayName": "Aswin",
+      "email": "aswinasus233@gmail.com",
+      "passwordHash": "2f87b5545de01d85e84d7d105c08c328319d63549a3bf8fece3e10bdee73901b",
+      "bio": "Waypost explorer & note seeker.",
+      "avatarPreset": "🌿",
+      "createdAt": "2026-10-10T21:43:25.426Z"
+    },
+    {
+      "id": "NRsSWMwMkD8",
+      "displayName": "mehbinsha",
+      "email": "mehbin21@gmail.com",
+      "passwordHash": "6475b401ffda8ab05d3c7fccf697d36f77fd9562a81c662c4fa58810bc824ee3",
+      "bio": "Waypost explorer & note seeker.",
+      "avatarPreset": "🧭",
+      "createdAt": "2026-10-10T21:54:46.173Z"
+    }
+  ],
+  "notes": [],
+  "reactions": [],
+  "bookmarks": [],
+  "$schema": "./node_modules/json-server/schema.json"
+}

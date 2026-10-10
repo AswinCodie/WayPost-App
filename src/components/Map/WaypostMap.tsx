@@ -4,6 +4,13 @@ import { WaypostNote, LocationCoordinates } from '../../types';
 import { getCategoryInfo } from '../../lib/categoryMeta';
 import { isWithinUnlockRadius, UNLOCK_RADIUS_METERS } from '../../lib/location';
 import { MapConfigService } from '../../lib/mapConfig';
+import { LocalStorageManager, STORAGE_KEYS } from '../../lib/storage';
+
+type StoredViewport = { latitude: number; longitude: number; zoom: number };
+const readViewport = (): StoredViewport | null => {
+  const view = LocalStorageManager.getItem<StoredViewport | null>(STORAGE_KEYS.MAP_VIEWPORT, null);
+  return view && Number.isFinite(view.latitude) && Number.isFinite(view.longitude) && Number.isFinite(view.zoom) ? view : null;
+};
 
 interface WaypostMapProps {
   userLocation: LocationCoordinates | null;
@@ -33,15 +40,17 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
   const userMarkerRef = useRef<L.Marker | null>(null);
   const radiusCircleRef = useRef<L.Circle | null>(null);
   const pickMarkerRef = useRef<L.Marker | null>(null);
+  const restoredViewportRef = useRef<StoredViewport | null>(readViewport());
 
   // Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
+      const restored = restoredViewportRef.current;
       const map = L.map(mapContainerRef.current, {
-        center: userLocation ? [userLocation.latitude, userLocation.longitude] : [20, 0],
-        zoom: userLocation ? 16 : 2,
+        center: restored ? [restored.latitude, restored.longitude] : userLocation ? [userLocation.latitude, userLocation.longitude] : [20, 0],
+        zoom: restored ? restored.zoom : userLocation ? 16 : 2,
         zoomControl: false,
         attributionControl: true,
       });
@@ -61,6 +70,10 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
       const markersGroup = L.layerGroup().addTo(map);
       markersLayerRef.current = markersGroup;
       mapInstanceRef.current = map;
+      map.on('moveend', () => {
+        const center = map.getCenter();
+        LocalStorageManager.setItem(STORAGE_KEYS.MAP_VIEWPORT, { latitude: center.lat, longitude: center.lng, zoom: map.getZoom() });
+      });
 
       // Handle map click for location picking
       map.on('click', (e: L.LeafletMouseEvent) => {
@@ -106,7 +119,9 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
     const key = `${userLocation.latitude.toFixed(4)},${userLocation.longitude.toFixed(4)}`;
     if (lastLocationKeyRef.current !== key) {
       lastLocationKeyRef.current = key;
-      map.flyTo([userLocation.latitude, userLocation.longitude], 16.5, { duration: 1.2 });
+      // A user-selected viewport survives refresh; only center automatically
+      // when there was no saved map view.
+      if (!restoredViewportRef.current) map.flyTo([userLocation.latitude, userLocation.longitude], 16.5, { duration: 1.2 });
     }
   }, [userLocation]);
 

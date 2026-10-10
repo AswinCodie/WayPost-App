@@ -15,6 +15,8 @@ export const STORAGE_KEYS = {
   REPORTS: 'waypost_reports_v1',
   SETTINGS: 'waypost_settings_v1',
   DEMO_INITIALIZED: 'waypost_demo_initialized_v1',
+  LAST_GPS_LOCATION: 'waypost_last_gps_location_v1',
+  MAP_VIEWPORT: 'waypost_map_viewport_v1',
 } as const;
 
 export class LocalStorageManager {

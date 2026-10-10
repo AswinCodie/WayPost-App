@@ -17,8 +17,6 @@ import { useLocation } from '../context/LocationContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotes } from '../context/NotesContext';
 import { imageStorage } from '../lib/imageStorage';
-import { isSupabaseConfigured } from '../lib/supabaseClient';
-import { supabaseData } from '../lib/supabaseData';
 import { WaypostMap } from '../components/Map/WaypostMap';
 
 const EXPIRY_OPTIONS: { value: ExpiryDuration; label: string; desc: string }[] = [
@@ -41,7 +39,7 @@ export const AddNotePage: React.FC = () => {
 
   // Location picking mode
   const [isPickingOnMap, setIsPickingOnMap] = useState<boolean>(false);
-  const [selectedCoords, setSelectedCoords] = useState<LocationCoordinates>(userCurrentCoords);
+  const [selectedCoords, setSelectedCoords] = useState<LocationCoordinates | null>(userCurrentCoords);
 
   // Images state
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -96,14 +94,17 @@ export const AddNotePage: React.FC = () => {
       return;
     }
 
+    if (!selectedCoords) {
+      setErrorMsg('Enable location access before placing a Waypost.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       // 1. Sync photos with Supabase Storage when the backend is configured.
       // The browser-only image store remains the offline/demo fallback.
-      const imageIds = isSupabaseConfigured
-        ? await supabaseData.uploadImages(selectedFiles, user?.id || '')
-        : await Promise.all(selectedFiles.map((file) => imageStorage.saveImage(file, file.name)));
+      const imageIds = await Promise.all(selectedFiles.map((file) => imageStorage.saveImage(file, file.name)));
 
       // 2. Create Note Record
       const newNote = await createNote({
@@ -246,7 +247,7 @@ export const AddNotePage: React.FC = () => {
                 Attach Photos
               </label>
               <p className="text-[11px] text-secondaryText">
-                {isSupabaseConfigured ? 'Synced securely with your Waypost account.' : 'Stored in this browser only.'}
+                Stored in this browser only.
               </p>
             </div>
             <button
@@ -307,7 +308,7 @@ export const AddNotePage: React.FC = () => {
                 Coordinates & Pin Location
               </label>
               <p className="text-[11px] text-secondaryText">
-                {isSimulated ? 'Using Simulated Coordinates' : 'Using Real Device GPS Coordinates'}
+                {selectedCoords ? 'Using device GPS coordinates' : 'Location permission is required to place a Waypost'}
               </p>
             </div>
             <button
@@ -340,12 +341,12 @@ export const AddNotePage: React.FC = () => {
               <div className="h-56 rounded-2xl overflow-hidden border border-[#DED8C7]">
                 <WaypostMap
                   userLocation={userCurrentCoords}
-                  isSimulated={isSimulated}
+                  isSimulated={false}
                   notes={[]}
                   selectedNote={null}
                   onSelectNote={() => {}}
                   isPickingLocation={true}
-                  pickedLocation={selectedCoords}
+                  pickedLocation={selectedCoords ?? undefined}
                   onPickLocation={(coords) => setSelectedCoords(coords)}
                 />
               </div>
@@ -355,7 +356,7 @@ export const AddNotePage: React.FC = () => {
           <div className="p-2.5 rounded-xl bg-[#FAF8F3] border border-[#E8E3D5] text-[11px] font-mono text-secondaryText flex items-center justify-between">
             <span>Coordinates:</span>
             <span className="font-semibold text-primaryText">
-              {selectedCoords.latitude.toFixed(5)}, {selectedCoords.longitude.toFixed(5)}
+              {selectedCoords ? `${selectedCoords.latitude.toFixed(5)}, ${selectedCoords.longitude.toFixed(5)}` : 'Waiting for GPS'}
             </span>
           </div>
         </div>

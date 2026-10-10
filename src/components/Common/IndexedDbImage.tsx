@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { imageStorage } from '../../lib/imageStorage';
-import { supabase } from '../../lib/supabaseClient';
 
 interface IndexedDbImageProps {
   imageId: string;
@@ -24,11 +23,7 @@ export const IndexedDbImage: React.FC<IndexedDbImageProps> = ({
     setIsLoading(true);
     setHasError(false);
 
-    const getUrl = imageId.startsWith('storage:')
-      ? Promise.resolve(supabase.storage.from('waypost-images').getPublicUrl(imageId.slice('storage:'.length)).data.publicUrl)
-      : imageStorage.getImageUrl(imageId);
-
-    getUrl
+    imageStorage.getImageUrl(imageId)
       .then((url) => {
         if (isMounted) {
           if (url) {

@@ -27,7 +27,7 @@ interface NoteDetailModalProps {
   note: WaypostNote | null;
   isOpen: boolean;
   onClose: () => void;
-  userLocation: LocationCoordinates;
+  userLocation: LocationCoordinates | null;
 }
 
 export const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
@@ -50,14 +50,15 @@ export const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
 
   if (!isOpen || !note) return null;
 
-  const distanceMeters = calculateDistanceMeters(
+  const distanceMeters = userLocation ? calculateDistanceMeters(
     userLocation.latitude,
     userLocation.longitude,
     note.latitude,
     note.longitude
-  );
+  ) : Number.POSITIVE_INFINITY;
 
   const isUnlocked = distanceMeters <= UNLOCK_RADIUS_METERS;
+  const distanceLabel = userLocation ? formatDistance(distanceMeters) : 'GPS needed';
   const categoryInfo = getCategoryInfo(note.category);
   const timeInfo = formatTimeRemaining(note.expiresAt);
   const liked = hasUserLiked(note.id);
@@ -130,12 +131,12 @@ export const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
                 {isUnlocked ? (
                   <>
                     <Unlock className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>Unlocked ({formatDistance(distanceMeters)})</span>
+                    <span>Unlocked ({distanceLabel})</span>
                   </>
                 ) : (
                   <>
                     <Lock className="w-3.5 h-3.5 text-stone-600" />
-                    <span>Locked ({formatDistance(distanceMeters)})</span>
+                    <span>Locked ({distanceLabel})</span>
                   </>
                 )}
               </span>

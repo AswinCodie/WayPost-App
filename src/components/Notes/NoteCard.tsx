@@ -9,7 +9,7 @@ import { useLocation } from '../../context/LocationContext';
 
 interface NoteCardProps {
   note: WaypostNote;
-  userLocation: LocationCoordinates;
+  userLocation: LocationCoordinates | null;
   onClick?: () => void;
   showMoveHereButton?: boolean;
 }
@@ -23,14 +23,15 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const { toggleLike, toggleBookmark, hasUserLiked, isBookmarked } = useNotes();
   const { setCustomCoordinates, isSimulated } = useLocation();
 
-  const distanceMeters = calculateDistanceMeters(
+  const distanceMeters = userLocation ? calculateDistanceMeters(
     userLocation.latitude,
     userLocation.longitude,
     note.latitude,
     note.longitude
-  );
+  ) : Number.POSITIVE_INFINITY;
 
   const isUnlocked = distanceMeters <= UNLOCK_RADIUS_METERS;
+  const distanceLabel = userLocation ? formatDistance(distanceMeters) : 'GPS needed';
   const categoryInfo = getCategoryInfo(note.category);
   const timeInfo = formatTimeRemaining(note.expiresAt);
   const liked = hasUserLiked(note.id);
@@ -104,12 +105,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             {isUnlocked ? (
               <>
                 <Unlock className="w-3 h-3 text-emerald-700" />
-                <span>{formatDistance(distanceMeters)}</span>
+                <span>{distanceLabel}</span>
               </>
             ) : (
               <>
                 <Lock className="w-3 h-3 text-stone-600" />
-                <span>{formatDistance(distanceMeters)}</span>
+                <span>{distanceLabel}</span>
               </>
             )}
           </span>
@@ -155,8 +156,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               <span>Locked Note — Proximity Restricted</span>
             </div>
             <p className="text-xs text-secondaryText leading-relaxed">
-              This note is sealed until you are within 150m. You are currently{' '}
-              <strong>{distanceMeters}m away</strong> ({distanceMeters - UNLOCK_RADIUS_METERS}m to walk).
+              {userLocation ? <>This note is sealed until you are within 150m. You are currently <strong>{distanceMeters}m away</strong> ({distanceMeters - UNLOCK_RADIUS_METERS}m to walk).</> : 'Enable GPS to calculate the distance to this note.'}
             </p>
             {isSimulated && showMoveHereButton && (
               <button

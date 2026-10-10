@@ -1,7 +1,17 @@
 import { UserAccount, UserProfile } from '../types';
 import { LocalStorageManager, STORAGE_KEYS } from './storage';
+import { API_BASE } from './jsonApi';
 
 const SALT = 'waypost_local_salt_v1:';
+// `/api` is proxied by Vite in development. Vercel builds use the public
+// Render URL supplied as VITE_API_URL instead.
+const ACCOUNTS_API = `${API_BASE}/accounts`;
+
+async function getSharedAccounts(): Promise<UserAccount[]> {
+  const response = await fetch(ACCOUNTS_API);
+  if (!response.ok) throw new Error('The shared Waypost server is unavailable. Start `npm run api` on the host computer.');
+  return response.json() as Promise<UserAccount[]>;
+}
 
 /**
  * Hash password client-side using Web Crypto SHA-256.
@@ -65,7 +75,12 @@ export class LocalAuthService {
       return { success: false, error: 'Password must be at least 6 characters.' };
     }
 
-    const accounts = this.getAccounts();
+    let accounts: UserAccount[];
+    try {
+      accounts = await getSharedAccounts();
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Could not reach the shared account server.' };
+    }
     if (accounts.some((a) => a.email.toLowerCase() === trimmedEmail)) {
       return { success: false, error: 'An account with this email already exists.' };
     }
@@ -81,8 +96,12 @@ export class LocalAuthService {
       createdAt: new Date().toISOString(),
     };
 
-    accounts.push(newAccount);
-    this.saveAccounts(accounts);
+    const createResponse = await fetch(ACCOUNTS_API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newAccount),
+    });
+    if (!createResponse.ok) return { success: false, error: 'Could not create the shared account.' };
+    // Keep a local cache only for offline profile display; authentication uses the shared API.
+    this.saveAccounts([...this.getAccounts().filter((a) => a.id !== newAccount.id), newAccount]);
 
     const profile: UserProfile = {
       id: newAccount.id,
@@ -102,8 +121,25 @@ export class LocalAuthService {
     password: string
   ): Promise<{ success: boolean; user?: UserProfile; error?: string }> {
     const trimmedEmail = email.trim().toLowerCase();
-    const accounts = this.getAccounts();
-    const account = accounts.find((a) => a.email.toLowerCase() === trimmedEmail);
+    let accounts: UserAccount[];
+    try {
+      accounts = await getSharedAccounts();
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Could not reach the shared account server.' };
+    }
+    let account = accounts.find((a) => a.email.toLowerCase() === trimmedEmail);
+
+    // One-time migration for accounts created before the shared JSON server
+    // was enabled. The user must still supply the correct password below.
+    if (!account) {
+      const localAccount = this.getAccounts().find((a) => a.email.toLowerCase() === trimmedEmail);
+      if (localAccount) {
+        const migration = await fetch(ACCOUNTS_API, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(localAccount),
+        });
+        if (migration.ok) account = localAccount;
+      }
+    }
 
     if (!account) {
       return { success: false, error: 'No account found with this email address.' };
