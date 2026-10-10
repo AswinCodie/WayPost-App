@@ -19,7 +19,7 @@ import { useNotes } from '../context/NotesContext';
 import { WaypostNote } from '../types';
 
 export const ExplorePage: React.FC = () => {
-  const { coordinates, requestRealLocation, permissionStatus, errorMessage } = useLocation();
+  const { coordinates, locateMe, recenterToken, permissionStatus, errorMessage } = useLocation();
   const {
     notes,
     activeFilter,
@@ -65,7 +65,7 @@ export const ExplorePage: React.FC = () => {
           </div>
 
           <button
-            onClick={requestRealLocation}
+            onClick={locateMe}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-forest/5 hover:bg-forest/10 text-forest text-xs font-semibold shrink-0 transition-colors"
             title="Use my current location"
           >
@@ -89,7 +89,7 @@ export const ExplorePage: React.FC = () => {
           {permissionStatus === 'granted' ? <>Real GPS position active</> : <>{errorMessage || 'Enable GPS to see your current position.'}</>}
         </span>
         <button
-          onClick={requestRealLocation}
+          onClick={locateMe}
           className="text-forest font-semibold underline ml-1 hover:text-forest-hover"
         >
           {permissionStatus === 'denied' ? 'Try again' : 'Locate me'}
@@ -104,11 +104,12 @@ export const ExplorePage: React.FC = () => {
           notes={notes}
           selectedNote={activePreviewNote}
           onSelectNote={handleSelectNoteFromMap}
+          recenterToken={recenterToken}
         />
 
         {/* Floating Return to My Location Button */}
         <button
-          onClick={requestRealLocation}
+          onClick={locateMe}
           className="absolute bottom-20 md:bottom-6 right-4 z-20 w-11 h-11 rounded-2xl bg-[#FAF8F3] hover:bg-white text-forest shadow-card border border-[#DED8C7] flex items-center justify-center transition-transform active:scale-95"
           title="Return to real location"
           aria-label="Locate me"
@@ -127,7 +128,7 @@ export const ExplorePage: React.FC = () => {
             </p>
           </div>
           <button
-            onClick={requestRealLocation}
+            onClick={locateMe}
             className="text-xs font-semibold text-forest bg-forest/5 hover:bg-forest/10 px-3 py-1.5 rounded-xl border border-forest/10 transition-colors"
           >
             Locate me

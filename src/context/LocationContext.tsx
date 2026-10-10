@@ -16,7 +16,7 @@ const readCachedLocation = () => {
 
 interface LocationContextType {
   coordinates: LocationCoordinates | null; isLocating: boolean; permissionStatus: Permission; errorMessage?: string; locationIsStale: boolean;
-  unlockRadiusMeters: number; requestRealLocation: () => void;
+  unlockRadiusMeters: number; requestRealLocation: () => void; locateMe: () => void; recenterToken: number;
   // Compatibility fields retained for components; simulation is permanently disabled.
   isSimulated: boolean; activePresetName: string; presets: never[]; setPreset: (id: string) => void; setCustomCoordinates: (coords: LocationCoordinates, label?: string) => void; toggleSimulationMode: () => void;
 }
@@ -28,6 +28,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [permissionStatus, setPermissionStatus] = useState<Permission>('prompt');
   const [errorMessage, setErrorMessage] = useState<string>();
   const [locationIsStale, setLocationIsStale] = useState(() => !!readCachedLocation());
+  const [recenterToken, setRecenterToken] = useState(0);
   const watchRef = useRef<number | null>(null);
   const requestInFlight = useRef(false);
   const requestedOnMount = useRef(false);
@@ -57,11 +58,17 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       watchRef.current = navigator.geolocation.watchPosition(savePosition, handleError, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
     }, handleError, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
   }, [handleError, savePosition, stopWatching]);
+  // Explicit user action: immediately center on the most recent valid point,
+  // then refresh it through the existing GPS request path.
+  const locateMe = useCallback(() => {
+    setRecenterToken((token) => token + 1);
+    requestRealLocation();
+  }, [requestRealLocation]);
   useEffect(() => {
     if (!requestedOnMount.current) { requestedOnMount.current = true; requestRealLocation(); }
     return () => stopWatching();
   }, [requestRealLocation, stopWatching]);
 
-  return <LocationContext.Provider value={{ coordinates, isLocating, permissionStatus, errorMessage, locationIsStale, unlockRadiusMeters: UNLOCK_RADIUS_METERS, requestRealLocation, isSimulated: false, activePresetName: '', presets: [], setPreset: () => {}, setCustomCoordinates: () => {}, toggleSimulationMode: () => {} }}>{children}</LocationContext.Provider>;
+  return <LocationContext.Provider value={{ coordinates, isLocating, permissionStatus, errorMessage, locationIsStale, unlockRadiusMeters: UNLOCK_RADIUS_METERS, requestRealLocation, locateMe, recenterToken, isSimulated: false, activePresetName: '', presets: [], setPreset: () => {}, setCustomCoordinates: () => {}, toggleSimulationMode: () => {} }}>{children}</LocationContext.Provider>;
 };
 export const useLocation = () => { const context = useContext(LocationContext); if (!context) throw new Error('useLocation must be used within LocationProvider'); return context; };

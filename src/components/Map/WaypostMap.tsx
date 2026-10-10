@@ -22,6 +22,7 @@ interface WaypostMapProps {
   isPickingLocation?: boolean;
   pickedLocation?: LocationCoordinates;
   onPickLocation?: (coords: LocationCoordinates) => void;
+  recenterToken?: number;
 }
 
 export const WaypostMap: React.FC<WaypostMapProps> = ({
@@ -33,6 +34,7 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
   isPickingLocation = false,
   pickedLocation,
   onPickLocation,
+  recenterToken = 0,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -41,6 +43,7 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
   const radiusCircleRef = useRef<L.Circle | null>(null);
   const pickMarkerRef = useRef<L.Marker | null>(null);
   const restoredViewportRef = useRef<StoredViewport | null>(readViewport());
+  const lastRecenterTokenRef = useRef(0);
 
   // Initialize Leaflet Map
   useEffect(() => {
@@ -124,6 +127,14 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
       if (!restoredViewportRef.current) map.flyTo([userLocation.latitude, userLocation.longitude], 16.5, { duration: 1.2 });
     }
   }, [userLocation]);
+
+  // Deliberate "Locate me" requests override a restored/user-panned view.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !userLocation || recenterToken === lastRecenterTokenRef.current) return;
+    lastRecenterTokenRef.current = recenterToken;
+    map.flyTo([userLocation.latitude, userLocation.longitude], 18, { duration: 0.7 });
+  }, [recenterToken, userLocation]);
 
   // Update User Location Marker & 150m Blue Radius Circle
   useEffect(() => {
