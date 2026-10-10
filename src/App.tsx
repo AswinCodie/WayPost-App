@@ -1,0 +1,19 @@
+import React from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { LocationProvider } from './context/LocationContext';
+import { NotesProvider } from './context/NotesContext';
+import { Navbar } from './components/Navigation/Navbar';
+import { AuthScreen } from './components/Auth/AuthScreen';
+import { ExplorePage } from './pages/ExplorePage';
+import { AddNotePage } from './pages/AddNotePage';
+import { SavedPage } from './pages/SavedPage';
+import { ProfilePage } from './pages/ProfilePage';
+const AppInner: React.FC = () => {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return <div className="min-h-screen bg-[#F4F0E5] flex items-center justify-center text-sm font-semibold text-[#18392D]">Loading Waypost…</div>;
+  if (!user) return <AuthScreen />;
+  return <LocationProvider><NotesProvider><BrowserRouter><div className="min-h-screen flex flex-col bg-[#F4F0E5] text-[#242923]"><Navbar /><main className="flex-1"><Routes><Route path="/" element={<ExplorePage />} /><Route path="/add" element={<AddNotePage />} /><Route path="/saved" element={<SavedPage />} /><Route path="/profile" element={<ProfilePage />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes></main></div></BrowserRouter></NotesProvider></LocationProvider>;
+};
+export const App: React.FC = () => <AuthProvider><AppInner /></AuthProvider>;
+export default App;
