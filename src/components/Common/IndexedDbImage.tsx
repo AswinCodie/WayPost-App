@@ -23,6 +23,14 @@ export const IndexedDbImage: React.FC<IndexedDbImageProps> = ({
     setIsLoading(true);
     setHasError(false);
 
+    // New shared notes store a compact data URL. Existing local notes still
+    // use IndexedDB, so keep both formats working.
+    if (imageId.startsWith('data:image/') || /^https?:\/\//.test(imageId)) {
+      setImageUrl(imageId);
+      setIsLoading(false);
+      return () => { isMounted = false; };
+    }
+
     imageStorage.getImageUrl(imageId)
       .then((url) => {
         if (isMounted) {

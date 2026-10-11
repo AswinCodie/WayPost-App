@@ -16,7 +16,7 @@ import { ALL_CATEGORIES, getCategoryInfo } from '../lib/categoryMeta';
 import { useLocation } from '../context/LocationContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotes } from '../context/NotesContext';
-import { imageStorage } from '../lib/imageStorage';
+import { createSharedImage } from '../lib/sharedImage';
 import { WaypostMap } from '../components/Map/WaypostMap';
 
 const EXPIRY_OPTIONS: { value: ExpiryDuration; label: string; desc: string }[] = [
@@ -102,9 +102,8 @@ export const AddNotePage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // 1. Sync photos with Supabase Storage when the backend is configured.
-      // The browser-only image store remains the offline/demo fallback.
-      const imageIds = await Promise.all(selectedFiles.map((file) => imageStorage.saveImage(file, file.name)));
+      // Store compact image data with the shared note so every device can render it.
+      const imageIds = await Promise.all(selectedFiles.map(createSharedImage));
 
       // 2. Create Note Record
       const newNote = await createNote({

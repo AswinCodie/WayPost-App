@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -19,7 +19,7 @@ import { NoteDetailModal } from '../components/Notes/NoteDetailModal';
 import { useLocation } from '../context/LocationContext';
 import { useNotes } from '../context/NotesContext';
 import { WaypostNote } from '../types';
-import { calculateDistanceMeters } from '../lib/location';
+import { calculateDistanceMeters, isWithinUnlockRadius } from '../lib/location';
 
 export const ExplorePage: React.FC = () => {
   const navigate = useNavigate();
@@ -38,6 +38,8 @@ export const ExplorePage: React.FC = () => {
 
   const [isMobileSheetExpanded, setIsMobileSheetExpanded] = useState<boolean>(false);
   const [activePreviewNote, setActivePreviewNote] = useState<WaypostNote | null>(null);
+  const [unlockMessage, setUnlockMessage] = useState<string | null>(null);
+  const snackbarTimerRef = useRef<number | null>(null);
   const nearbyNotes = useMemo(() => {
     if (!coordinates) return notes;
     return [...notes].sort((a, b) =>
@@ -46,8 +48,23 @@ export const ExplorePage: React.FC = () => {
     );
   }, [coordinates, notes]);
 
+  const openNoteIfNearby = (note: WaypostNote) => {
+    const canOpen = coordinates && isWithinUnlockRadius(coordinates, {
+      latitude: note.latitude,
+      longitude: note.longitude,
+    });
+    if (canOpen) {
+      setActivePreviewNote(note);
+      openNoteDetail(note);
+      return;
+    }
+    setUnlockMessage('Visit this place to unlock the Waypost.');
+    if (snackbarTimerRef.current !== null) window.clearTimeout(snackbarTimerRef.current);
+    snackbarTimerRef.current = window.setTimeout(() => setUnlockMessage(null), 3000);
+  };
+
   const handleSelectNoteFromMap = (note: WaypostNote) => {
-    setActivePreviewNote(note);
+    openNoteIfNearby(note);
   };
 
   return (
@@ -175,7 +192,7 @@ export const ExplorePage: React.FC = () => {
                 userLocation={coordinates}
                 onClick={() => {
                   setActivePreviewNote(note);
-                  openNoteDetail(note);
+                  openNoteIfNearby(note);
                 }}
               />
             ))
@@ -197,7 +214,7 @@ export const ExplorePage: React.FC = () => {
             <NoteCard
               note={activePreviewNote}
               userLocation={coordinates}
-              onClick={() => openNoteDetail(activePreviewNote)}
+              onClick={() => openNoteIfNearby(activePreviewNote)}
             />
           </div>
         </div>
@@ -207,10 +224,10 @@ export const ExplorePage: React.FC = () => {
       <div
         className={`md:hidden absolute left-0 right-0 z-30 bg-[#FAF8F3] border-t border-[#DED8C7] rounded-t-3xl shadow-sheet transition-all duration-300 flex flex-col ${
           isMobileSheetExpanded
-            ? 'top-20 bottom-14'
+            ? 'top-20 bottom-[4.5rem]'
             : activePreviewNote
             ? 'hidden'
-            : 'bottom-14 h-48'
+            : 'bottom-[4.5rem] h-48'
         }`}
       >
         {/* Drag Handle / Bar */}
@@ -248,7 +265,7 @@ export const ExplorePage: React.FC = () => {
                 userLocation={coordinates}
                 onClick={() => {
                   setActivePreviewNote(note);
-                  openNoteDetail(note);
+                  openNoteIfNearby(note);
                 }}
               />
             ))
@@ -263,6 +280,12 @@ export const ExplorePage: React.FC = () => {
         onClose={closeNoteDetail}
         userLocation={coordinates}
       />
+
+      {unlockMessage && (
+        <div className="fixed left-1/2 bottom-24 md:bottom-6 z-[70] -translate-x-1/2 rounded-xl bg-[#18392D] px-4 py-3 text-xs font-semibold text-[#FAF8F3] shadow-elevated animate-slide-up">
+          {unlockMessage}
+        </div>
+      )}
     </div>
   );
 };
