@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   Crosshair,
+  PlusCircle,
   MapPin,
   SlidersHorizontal,
   ChevronUp,
@@ -20,6 +22,7 @@ import { WaypostNote } from '../types';
 import { calculateDistanceMeters } from '../lib/location';
 
 export const ExplorePage: React.FC = () => {
+  const navigate = useNavigate();
   const { coordinates, locateMe, recenterToken, permissionStatus, errorMessage } = useLocation();
   const {
     notes,
@@ -118,11 +121,19 @@ export const ExplorePage: React.FC = () => {
         {/* Floating Return to My Location Button */}
         <button
           onClick={locateMe}
-          className="absolute bottom-20 md:bottom-6 right-4 z-20 w-11 h-11 rounded-2xl bg-[#FAF8F3] hover:bg-white text-forest shadow-card border border-[#DED8C7] flex items-center justify-center transition-transform active:scale-95"
+          className="absolute bottom-20 md:bottom-3 right-[4.25rem] z-20 w-11 h-11 rounded-2xl bg-[#FAF8F3] hover:bg-white text-forest shadow-card border border-[#DED8C7] flex items-center justify-center transition-transform active:scale-95"
           title="Return to real location"
           aria-label="Locate me"
         >
           <Crosshair className="w-5 h-5" />
+        </button>
+
+        <button
+          onClick={() => navigate('/add')}
+          className="hidden md:flex absolute bottom-3 right-[8.5rem] z-20 items-center gap-2 px-4 py-3 rounded-2xl bg-forest hover:bg-forest-hover text-[#FAF8F3] text-sm font-bold shadow-card transition-transform active:scale-95"
+        >
+          <PlusCircle className="w-4 h-4 text-sage" />
+          <span>Add Note</span>
         </button>
       </div>
 

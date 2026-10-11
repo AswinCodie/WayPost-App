@@ -70,6 +70,12 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
       // Add zoom control at bottom-right
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
+      // GPS visuals intentionally sit beneath every Waypost marker.
+      const gpsCirclePane = map.createPane('waypostGpsCirclePane');
+      gpsCirclePane.style.zIndex = '300';
+      const gpsMarkerPane = map.createPane('waypostGpsMarkerPane');
+      gpsMarkerPane.style.zIndex = '350';
+
       const markersGroup = L.layerGroup().addTo(map);
       markersLayerRef.current = markersGroup;
       mapInstanceRef.current = map;
@@ -149,6 +155,7 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
     }
     const circle = L.circle(userLatLng, {
       radius: UNLOCK_RADIUS_METERS,
+      pane: 'waypostGpsCirclePane',
       color: '#2563eb',       // strong blue border
       weight: 1.5,
       dashArray: '6, 4',
@@ -179,18 +186,9 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
     }
     const marker = L.marker(userLatLng, {
       icon: userIcon,
-      zIndexOffset: 50,
+      pane: 'waypostGpsMarkerPane',
+      zIndexOffset: 0,
     }).addTo(map);
-
-    marker.bindTooltip(
-      isSimulated ? '📍 You Are Here (Simulated)' : '📍 You Are Here (GPS)',
-      {
-        permanent: true,
-        direction: 'top',
-        offset: [0, -16],
-        className: 'waypost-user-tooltip',
-      }
-    );
     userMarkerRef.current = marker;
   }, [userLocation, isSimulated]);
 
