@@ -9,9 +9,10 @@ import { ExplorePage } from './pages/ExplorePage';
 import { AddNotePage } from './pages/AddNotePage';
 import { SavedPage } from './pages/SavedPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { LoaderCircle } from 'lucide-react';
 const AppInner: React.FC = () => {
   const { user, isLoading } = useAuth();
-  if (isLoading) return <div className="min-h-screen bg-[#F4F0E5] flex items-center justify-center text-sm font-semibold text-[#18392D]">Loading Waypost…</div>;
+  if (isLoading) return <div className="min-h-screen bg-[#F4F0E5] flex flex-col items-center justify-center gap-3 text-sm font-semibold text-[#18392D]"><LoaderCircle className="w-8 h-8 animate-spin text-forest" /><span>Loading Waypost…</span></div>;
   if (!user) return <AuthScreen />;
   return <LocationProvider><NotesProvider><BrowserRouter><div className="min-h-screen flex flex-col bg-[#F4F0E5] text-[#242923]"><Navbar /><main className="flex-1"><Routes><Route path="/" element={<ExplorePage />} /><Route path="/add" element={<AddNotePage />} /><Route path="/saved" element={<SavedPage />} /><Route path="/profile" element={<ProfilePage />} /><Route path="*" element={<Navigate to="/" replace />} /></Routes></main></div></BrowserRouter></NotesProvider></LocationProvider>;
 };

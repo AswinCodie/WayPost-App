@@ -31,11 +31,13 @@ export class NotesService {
 
   static createNote(input: CreateNoteInput): WaypostNote {
     const now = Date.now();
-    let durationMs = 24 * 60 * 60 * 1000;
+    let expiresAt = new Date(now + 24 * 60 * 60 * 1000).toISOString();
     if (input.expiryDuration === '3d') {
-      durationMs = 3 * 24 * 60 * 60 * 1000;
+      expiresAt = new Date(now + 3 * 24 * 60 * 60 * 1000).toISOString();
     } else if (input.expiryDuration === '7d') {
-      durationMs = 7 * 24 * 60 * 60 * 1000;
+      expiresAt = new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString();
+    } else if (input.expiryDuration === 'lifetime') {
+      expiresAt = '9999-12-31T23:59:59.999Z';
     }
 
     const newNote: WaypostNote = {
@@ -47,7 +49,7 @@ export class NotesService {
       longitude: input.longitude,
       locationName: input.locationName?.trim() || 'Waypost Marker',
       createdAt: new Date(now).toISOString(),
-      expiresAt: new Date(now + durationMs).toISOString(),
+      expiresAt,
       expiryDuration: input.expiryDuration,
       imageIds: input.imageIds,
       authorId: input.authorId,

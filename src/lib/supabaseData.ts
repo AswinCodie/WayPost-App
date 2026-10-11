@@ -71,8 +71,10 @@ export const supabaseData = {
 
   async createNote(input: CreateNoteInput): Promise<WaypostNote> {
     requireConnection();
-    const durationMs = input.expiryDuration === '24h' ? 86_400_000 : input.expiryDuration === '3d' ? 259_200_000 : 604_800_000;
     const now = new Date();
+    const expiresAt = input.expiryDuration === 'lifetime'
+      ? '9999-12-31T23:59:59.999Z'
+      : new Date(now.getTime() + (input.expiryDuration === '24h' ? 86_400_000 : input.expiryDuration === '3d' ? 259_200_000 : 604_800_000)).toISOString();
     const { data, error } = await supabase.from('notes').insert({
       title: input.title?.trim() || null,
       text: input.text.trim(),
@@ -81,7 +83,7 @@ export const supabaseData = {
       longitude: input.longitude,
       location_name: input.locationName?.trim() || 'Waypost Marker',
       created_at: now.toISOString(),
-      expires_at: new Date(now.getTime() + durationMs).toISOString(),
+      expires_at: expiresAt,
       expiry_duration: input.expiryDuration,
       image_paths: input.imageIds,
       author_id: input.authorId,

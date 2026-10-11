@@ -23,6 +23,7 @@ const EXPIRY_OPTIONS: { value: ExpiryDuration; label: string; desc: string }[] =
   { value: '24h', label: '24 Hours', desc: 'Fleeting whisper for today' },
   { value: '3d', label: '3 Days', desc: 'Weekend trail note' },
   { value: '7d', label: '7 Days', desc: 'A week on the path' },
+  { value: 'lifetime', label: 'Permanent', desc: 'Stays on the trail' },
 ];
 
 export const AddNotePage: React.FC = () => {
@@ -365,7 +366,7 @@ export const AddNotePage: React.FC = () => {
           <label className="text-xs font-bold uppercase tracking-wider text-secondaryText block">
             Lifespan on the Trail
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {EXPIRY_OPTIONS.map((opt) => {
               const isSelected = expiryDuration === opt.value;
               return (

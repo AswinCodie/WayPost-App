@@ -8,7 +8,7 @@ export type Category =
 
 export type CategoryFilter = 'All' | Category;
 
-export type ExpiryDuration = '24h' | '3d' | '7d';
+export type ExpiryDuration = '24h' | '3d' | '7d' | 'lifetime';
 
 export interface LocationCoordinates {
   latitude: number;

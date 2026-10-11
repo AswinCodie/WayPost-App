@@ -83,6 +83,7 @@ export function getCategoryInfo(category: Category): CategoryInfo {
 }
 
 export function formatTimeRemaining(expiresAt: string): { text: string; isUrgent: boolean } {
+  if (new Date(expiresAt).getUTCFullYear() >= 9999) return { text: 'Permanent', isUrgent: false };
   const diffMs = new Date(expiresAt).getTime() - Date.now();
   if (diffMs <= 0) return { text: 'Expired', isUrgent: true };
 
