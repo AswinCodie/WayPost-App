@@ -49,6 +49,9 @@ export const Navbar: React.FC = () => {
               key={to}
               to={to}
               end={to === "/"}
+              onClick={() => {
+                if (to === "/") window.dispatchEvent(new Event('waypost:show-nearby-sheet'));
+              }}
               className={({ isActive }) =>
                 `flex flex-col items-center py-1 px-3 ${isActive ? "text-forest font-semibold" : "text-secondaryText"}`
               }

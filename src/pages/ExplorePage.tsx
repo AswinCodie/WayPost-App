@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -8,6 +8,7 @@ import {
   SlidersHorizontal,
   ChevronUp,
   ChevronDown,
+  EyeOff,
   Sparkles,
   Layers,
   Info,
@@ -37,6 +38,7 @@ export const ExplorePage: React.FC = () => {
   } = useNotes();
 
   const [isMobileSheetExpanded, setIsMobileSheetExpanded] = useState<boolean>(false);
+  const [isMobileSheetHidden, setIsMobileSheetHidden] = useState<boolean>(false);
   const [activePreviewNote, setActivePreviewNote] = useState<WaypostNote | null>(null);
   const [unlockMessage, setUnlockMessage] = useState<string | null>(null);
   const snackbarTimerRef = useRef<number | null>(null);
@@ -48,6 +50,15 @@ export const ExplorePage: React.FC = () => {
       calculateDistanceMeters(coordinates.latitude, coordinates.longitude, b.latitude, b.longitude)
     );
   }, [coordinates, notes]);
+
+  useEffect(() => {
+    const showNearbySheet = () => {
+      setIsMobileSheetHidden(false);
+      setIsMobileSheetExpanded(false);
+    };
+    window.addEventListener('waypost:show-nearby-sheet', showNearbySheet);
+    return () => window.removeEventListener('waypost:show-nearby-sheet', showNearbySheet);
+  }, []);
 
   const openNoteIfNearby = (note: WaypostNote) => {
     const canOpen = coordinates && isWithinUnlockRadius(coordinates, {
@@ -233,6 +244,8 @@ export const ExplorePage: React.FC = () => {
         className={`md:hidden absolute left-0 right-0 z-30 bg-[#FAF8F3] border-t border-[#DED8C7] rounded-t-3xl shadow-sheet transition-all duration-300 flex flex-col overscroll-contain ${
           isMobileSheetExpanded
             ? 'top-20 bottom-[4.5rem]'
+            : isMobileSheetHidden
+            ? 'hidden'
             : activePreviewNote
             ? 'hidden'
             : 'bottom-[4.5rem] h-48'
@@ -257,13 +270,28 @@ export const ExplorePage: React.FC = () => {
             <span className="font-bold text-xs text-forest font-display">
               Nearby Notes ({nearbyNotes.length})
             </span>
-            <div className="flex items-center gap-1 text-xs text-secondaryText">
-              <span>{isMobileSheetExpanded ? 'Collapse' : 'Expand list'}</span>
-              {isMobileSheetExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronUp className="w-3.5 h-3.5" />
-              )}
+            <div className="flex items-center gap-3 text-xs text-secondaryText">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIsMobileSheetHidden(true);
+                  setIsMobileSheetExpanded(false);
+                }}
+                className="flex items-center gap-1 text-secondaryText hover:text-forest"
+                aria-label="Hide nearby notes"
+              >
+                <EyeOff className="w-3.5 h-3.5" />
+                <span>Hide</span>
+              </button>
+              <div className="flex items-center gap-1">
+                <span>{isMobileSheetExpanded ? 'Collapse' : 'Expand list'}</span>
+                {isMobileSheetExpanded ? (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                )}
+              </div>
             </div>
           </div>
         </div>
