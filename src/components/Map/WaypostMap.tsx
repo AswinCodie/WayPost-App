@@ -150,19 +150,19 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
     const circle = L.circle(userLatLng, {
       radius: UNLOCK_RADIUS_METERS,
       color: '#2563eb',       // strong blue border
-      weight: 3,
+      weight: 1.5,
       dashArray: '6, 4',
       fillColor: '#60a5fa',   // light blue fill
-      fillOpacity: 0.18,
+      fillOpacity: 0.06,
     }).addTo(map);
     radiusCircleRef.current = circle;
 
     // Create glowing blue user icon
     const userIconHtml = `
       <div class="waypost-user-location" style="position: relative; width: 32px; height: 32px;">
-        <div style="position: absolute; top: -20px; left: -20px; width: 72px; height: 72px; border-radius: 50%; background: rgba(37, 99, 235, 0.22); animation: waypost-pulse 2s infinite ease-out; pointer-events: none;"></div>
-        <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 4px solid #FFFFFF; box-shadow: 0 0 0 2px rgba(59,130,246,0.5), 0 4px 18px rgba(37, 99, 235, 0.7); display: flex; align-items: center; justify-content: center;">
-          <div style="width: 10px; height: 10px; border-radius: 50%; background: #FFFFFF;"></div>
+        <div style="position: absolute; top: -12px; left: -12px; width: 56px; height: 56px; border-radius: 50%; background: rgba(37, 99, 235, 0.12); animation: waypost-pulse 2s infinite ease-out; pointer-events: none;"></div>
+        <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: 3px solid #FFFFFF; box-shadow: 0 0 0 1px rgba(59,130,246,0.35), 0 3px 10px rgba(37, 99, 235, 0.45); display: flex; align-items: center; justify-content: center;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #FFFFFF;"></div>
         </div>
       </div>
     `;
@@ -170,8 +170,8 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
     const userIcon = L.divIcon({
       html: userIconHtml,
       className: 'waypost-user-div-icon',
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
     });
 
     if (userMarkerRef.current) {
@@ -179,7 +179,7 @@ export const WaypostMap: React.FC<WaypostMapProps> = ({
     }
     const marker = L.marker(userLatLng, {
       icon: userIcon,
-      zIndexOffset: 1000,
+      zIndexOffset: 50,
     }).addTo(map);
 
     marker.bindTooltip(

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Search,
   Crosshair,
@@ -17,6 +17,7 @@ import { NoteDetailModal } from '../components/Notes/NoteDetailModal';
 import { useLocation } from '../context/LocationContext';
 import { useNotes } from '../context/NotesContext';
 import { WaypostNote } from '../types';
+import { calculateDistanceMeters } from '../lib/location';
 
 export const ExplorePage: React.FC = () => {
   const { coordinates, locateMe, recenterToken, permissionStatus, errorMessage } = useLocation();
@@ -34,6 +35,13 @@ export const ExplorePage: React.FC = () => {
 
   const [isMobileSheetExpanded, setIsMobileSheetExpanded] = useState<boolean>(false);
   const [activePreviewNote, setActivePreviewNote] = useState<WaypostNote | null>(null);
+  const nearbyNotes = useMemo(() => {
+    if (!coordinates) return notes;
+    return [...notes].sort((a, b) =>
+      calculateDistanceMeters(coordinates.latitude, coordinates.longitude, a.latitude, a.longitude) -
+      calculateDistanceMeters(coordinates.latitude, coordinates.longitude, b.latitude, b.longitude)
+    );
+  }, [coordinates, notes]);
 
   const handleSelectNoteFromMap = (note: WaypostNote) => {
     setActivePreviewNote(note);
@@ -101,7 +109,7 @@ export const ExplorePage: React.FC = () => {
         <WaypostMap
           userLocation={coordinates}
           isSimulated={false}
-          notes={notes}
+          notes={nearbyNotes}
           selectedNote={activePreviewNote}
           onSelectNote={handleSelectNoteFromMap}
           recenterToken={recenterToken}
@@ -124,7 +132,7 @@ export const ExplorePage: React.FC = () => {
           <div>
             <h3 className="font-bold text-base text-forest font-display">Nearby Wayposts</h3>
             <p className="text-xs text-secondaryText">
-              {notes.length} {notes.length === 1 ? 'note' : 'notes'} in current view
+              {nearbyNotes.length} {nearbyNotes.length === 1 ? 'note' : 'notes'} in current view
             </p>
           </div>
           <button
@@ -136,7 +144,7 @@ export const ExplorePage: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
-          {notes.length === 0 ? (
+          {nearbyNotes.length === 0 ? (
             <div className="text-center py-12 px-4 space-y-3">
               <div className="w-12 h-12 rounded-2xl bg-forest/10 text-forest mx-auto flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-forest" />
@@ -149,7 +157,7 @@ export const ExplorePage: React.FC = () => {
               </p>
             </div>
           ) : (
-            notes.map((note) => (
+            nearbyNotes.map((note) => (
               <NoteCard
                 key={note.id}
                 note={note}
@@ -202,7 +210,7 @@ export const ExplorePage: React.FC = () => {
           <div className="w-10 h-1 rounded-full bg-[#C8D3C5] mb-2" />
           <div className="flex items-center justify-between w-full px-4">
             <span className="font-bold text-xs text-forest font-display">
-              Nearby Notes ({notes.length})
+              Nearby Notes ({nearbyNotes.length})
             </span>
             <div className="flex items-center gap-1 text-xs text-secondaryText">
               <span>{isMobileSheetExpanded ? 'Collapse' : 'Expand list'}</span>
@@ -217,12 +225,12 @@ export const ExplorePage: React.FC = () => {
 
         {/* Scrollable list of cards */}
         <div className="flex-1 overflow-y-auto p-3.5 space-y-3">
-          {notes.length === 0 ? (
+          {nearbyNotes.length === 0 ? (
             <div className="text-center py-6 text-xs text-secondaryText">
               No notes found in this area.
             </div>
           ) : (
-            notes.map((note) => (
+            nearbyNotes.map((note) => (
               <NoteCard
                 key={note.id}
                 note={note}
